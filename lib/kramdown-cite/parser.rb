@@ -8,7 +8,7 @@ module Kramdown
 				@span_parsers.insert(@span_parsers.find_index(:link), :citations, :inline_citation)
 			}
 
-			CITE_KEY = "[-a-zA-Z:0-9]+"
+			CITE_KEY = "[-a-zA-Z:0-9/]+"
 			CITE_INLINE = /@(#{CITE_KEY})/
 			CITE_INLINE_MARKER = /^@(#{CITE_KEY})/
 			CITE_MARKER = /^\[@#{CITE_KEY}(?:;@#{CITE_KEY})*\]/

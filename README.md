@@ -78,7 +78,6 @@ Known issuses
 - Citation syntax is only limited to basic forms
 - [citeproc-ruby][] does not render well multiple citation
 - Html output is not perfect
-- Citation key should have the same case than the BibTeX one
 
 Contributing
 ------------

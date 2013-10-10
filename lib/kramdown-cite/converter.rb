@@ -7,20 +7,29 @@ module Kramdown
 					begin
 						require 'bibtex' # to load bibliography
 						require 'citeproc' # to render citations
-						@bibs = BibTeX.open(@options[:bib]) unless @bibs
+						@bibs = BibTeX.open(@options[:bib], :filter => :latex)
+						downcase_hash_keys(@bibs.entries)
 					rescue LoadError => e
 						warning("Cannot open required library '#{e}'")
 						@bibs = false
-					rescue
+					rescue Errno::ENOENT
 						warning("Cannot open bibliography file '#{@options[:bib]}'")
 						@bibs = false
+					rescue
+						begin
+							@bibs = BibTeX.open(@options[:bib])
+							downcase_hash_keys(@bibs.entries)
+						rescue
+							warning("Cannot open bibliography file '#{@options[:bib]}'")
+							@bibs = false
+						end
 					end
 				end
 
 				if @bibs then
 					@citations = Hash.new unless @citations
 					cites = el.value.map{|c|
-						c = c.to_sym
+						c = c.downcase.to_sym
 						@citations[c] = @bibs[c].to_citeproc unless @citations.key?(c)
 						render_citelink(c, @citations[c])
 					}.join(", ")
@@ -28,6 +37,10 @@ module Kramdown
 					cites = el.value.map{|x| "@#{x}"}.join(";")
 				end
 				el.attr[:inline] ? cites : "[#{cites}]"
+			end
+
+			def downcase_hash_keys(hash)
+				hash.keys.each { |k| hash[ k.downcase ] = hash.delete(k) }
 			end
 
 			def render_citelink(c, entry)
@@ -46,11 +59,13 @@ module Kramdown
 				return '' unless @citations
 				ul = Element.new(:ul)
 				style = @options[:csl]
+				items = Hash.new
 				@citations.each{|k, c|
 					li = Element.new(:li, nil, {'id' => "bib:#{k}"})
-					ul.children << li
+					hash["#{c[:author].value} #{c[:year]}"] = li
 					li.children << Element.new(:text, CiteProc.process(c, :style => style))
 				}
+				items.keys.sort{|k| ul.children << items[k]}
 				format_as_indented_block_html('div', {:class => "bibliography"}, convert(ul, 2), 0)
 			end
 		end
