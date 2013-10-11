@@ -7,6 +7,8 @@ module Kramdown
 					begin
 						require 'bibtex' # to load bibliography
 						require 'citeproc' # to render citations
+						@csl = @options[:csl]
+						@csl = CSL.new(@csl) if File.exists?(@csl)
 						@bibs = BibTeX.open(@options[:bib], :filter => :latex)
 						downcase_hash_keys(@bibs.entries)
 					rescue LoadError => e
@@ -44,7 +46,7 @@ module Kramdown
 			end
 
 			def render_citelink(c, entry)
-				val = CiteProc.process(entry, :style => @options[:csl], :format => :html, :mode => :cite)[0]
+				val = CiteProc.process(entry, :style => @csl, :format => :html, :mode => :cite)[0]
 				"<a href=\"#bib:#{c}\" class=\"bibliography\">#{val}</a>"
 			end
 
@@ -58,14 +60,14 @@ module Kramdown
 			def citation_content
 				return '' unless @citations
 				ul = Element.new(:ul)
-				style = @options[:csl]
-				items = Hash.new
+				biblio = Hash.new
 				@citations.each{|k, c|
 					li = Element.new(:li, nil, {'id' => "bib:#{k}"})
-					hash["#{c[:author].value} #{c[:year]}"] = li
-					li.children << Element.new(:text, CiteProc.process(c, :style => style))
+					text = CiteProc.process(c, :style => @csl)
+					li.children << Element.new(:text, text)
+					biblio[text] = li
 				}
-				items.keys.sort{|k| ul.children << items[k]}
+				biblio.keys.sort.each{|k| ul.children << biblio[k]}
 				format_as_indented_block_html('div', {:class => "bibliography"}, convert(ul, 2), 0)
 			end
 		end
