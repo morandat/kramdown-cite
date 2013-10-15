@@ -139,13 +139,13 @@ module Kramdown
 							item.children << Element.new(:text, "] ")
 						end
 					end
-				rescue Exception => e
+				rescue
 				end
 				item
 			end
 
 			def citation_content
-				return '' unless @citations
+				return '' unless @citations and @citations.size > 0
 				mode = @options.fetch(:bibstyle, :plain).to_sym
 
 				case mode
