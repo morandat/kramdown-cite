@@ -153,7 +153,16 @@ module Kramdown
 					biblio = Array.new(@cites_number.size)
 					@cites_number.each{|k, idx| biblio[idx - 1] = render_citation_index k}
 				else
-					biblio = @citations.keys.map{|k| render_citation_index k}.sort
+					cites =  @citations.keys
+					cites.sort! do |aa, bb|
+						a = @citations[aa]
+						b = @citations[bb]
+						# TODO loop around authors then date
+						c = a['author'][0]['family'] <=> b['author'][0]['family']
+						c = a['issued']['date-parts'][0][0] <=> b['issued']['date-parts'][0][0] if c == 0
+						c
+					end if @options[:bibsort] 
+					biblio = cites.map{|k| render_citation_index k}
 				end
 				biblio = biblio.compact
 				if biblio.size > 0 then
